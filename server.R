@@ -6,15 +6,19 @@
 #
 
 library(shiny)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 library(DT)
+library(scales)
+library(waffle)
 
 procedures <- read.csv("SNAP2_procedurelist.csv", stringsAsFactors = FALSE)
+risk_distrib <- read.csv("SNAP2_riskdistribution.csv", stringsAsFactors = FALSE)
+percentile_morb <- ecdf(risk_distrib$SORT_morb_risk)
+percentile_mort <- ecdf(risk_distrib$SORT_mort_risk)
 
 shinyServer(function(input, output) {
   
-  out_tab <- reactive({
+  out_tab <- eventReactive(input$Compute, {
     
     procedures %>% filter(SurgeryProcedure %in% input$Procedure) %>%
       select(SurgeryProcedure, SurgeryProcedureSeverity) %>%
@@ -23,6 +27,7 @@ shinyServer(function(input, output) {
       mutate(Specialty = input$Specialty) %>%
       mutate(Malignancy = input$Malignancy) %>%
       mutate(Age = input$Age) %>%
+      mutate(Clinical = input$Clinical) %>%
       mutate(SORT_morb_logit = ((ASA == "2") * 0.332 +
                                   (ASA == "3") * 1.140 + 
                                   (ASA == "4") * 1.223 +
@@ -57,24 +62,113 @@ shinyServer(function(input, output) {
       mutate(Day21 = arm::invlogit(SORT_morb_logit * 1.081 - 2.327)) %>%
       mutate(Day28 = arm::invlogit(SORT_morb_logit * 1.048 - 2.770)) %>%
       mutate(SORT_mortality = arm::invlogit(SORT_mort_logit)) %>%
-      select(POMS_Risk:SORT_mortality) %>%
+      mutate(Combined_pred = ifelse(Clinical == "Don't know", NA, 
+                                    arm::invlogit(0.04044 * (SORT_mortality * 100) + 
+                                                    1.679 * (Clinical == "1-2.5%") + 
+                                                    2.583 * (Clinical == "2.6-5%") + 
+                                                    3.295 * (Clinical == "5.1-10%") + 
+                                                    4.356 * (Clinical == "10.1-50%") + 
+                                                    5.234 * (Clinical == ">50%") -
+                                                    6.629))) %>%
+      select(POMS_Risk:Combined_pred) %>%
       rename(`D7 POMS` = "POMS_Risk",
              `D7 Low-grade POMS` = "Low_grade",
              `D7 High-grade POMS` = "High_grade",
              `D14 POMS` = "Day14",
              `D21 POMS` = "Day21",
              `D28 POMS` = "Day28",
-             `D30 Mortality (SORT)` = "SORT_mortality")
+             `D30 Mortality (SORT)` = "SORT_mortality",
+             `D30 Mortality (Subjective assessment adjusted)` = "Combined_pred")
     
   })
 
   output$Table <- renderDT({
     
-    out_tab() %>%
+    risks <- out_tab() %>%
       gather(key = "Outcome", value = "Risk") %>%
       datatable(options = list(dom = 't'), rownames = FALSE) %>% 
       formatPercentage(digits = 2,
                        c("Risk"))
+    
+  })
+  
+  output$MorbGraph <- renderPlot({
+    
+    ggplot(risk_distrib, aes(x = SORT_morb_risk)) +
+      geom_density(adjust = 5, size = 1, col = "white", fill = "skyblue") +
+      labs(title = "D7 POMS morbidity",
+           x = "Risk", 
+           y = "Probability Density") +
+      theme_minimal() +
+      geom_vline(data = as.data.frame(out_tab()), aes(xintercept = `D7 POMS`)) +
+      geom_label(data = as.data.frame(out_tab()), 
+                 aes(x = `D7 POMS`, y = -0.1, label = 
+                       paste0(round(percentile_morb(`D7 POMS`)*100, 1), " centile"))) +
+      scale_x_continuous(labels = percent)
+    
+  })
+  
+  output$MorbWaffle <- renderPlot({
+    
+    patients_POMS <- round(as.data.frame(out_tab())$`D7 POMS` * 1000)
+    
+    waffle(c("Morbidity" = patients_POMS, 
+             "No morbidity" = 1000 - patients_POMS),
+           rows = 25,
+           size = 1,
+           glyph_size = 16,
+           colors = c("#fc8d62", "#66c2a5"), 
+           title = "D7 POMS morbidity",
+           legend_pos = "bottom") +
+      labs(subtitle = "Each box represents one person.\nThere are 1,000 people represented in this plot.")
+    
+  })
+  
+  output$MortGraph <- renderPlot({
+    
+    ggplot(risk_distrib, aes(x = SORT_mort_risk)) +
+      geom_density(adjust = 5, size = 1, col = "white", fill = "skyblue") +
+      labs(title = "D30 Mortality complications",
+           x = "Risk", 
+           y = "Probability Density") +
+      theme_minimal() +
+      geom_vline(data = as.data.frame(out_tab()), aes(xintercept = `D30 Mortality (SORT)`)) +
+      geom_label(data = as.data.frame(out_tab()), 
+                 aes(x = `D30 Mortality (SORT)`, y = -0.1, label = 
+                       paste0(round(percentile_mort(`D30 Mortality (SORT)`)*100, 1), " centile"))) +
+      scale_x_continuous(labels = percent)
+    
+  })
+  
+  output$MortWaffle <- renderPlot({
+    
+    patients_mort <- round(as.data.frame(out_tab())$`D30 Mortality (SORT)` * 1000)
+    
+    waffle(c("Deaths" = patients_mort, 
+             "Survivors" = 1000 - patients_mort),
+           rows = 25,
+           size = 1,
+           glyph_size = 16,
+           colors = c("#fc8d62", "#66c2a5"), 
+           title = "D30 Mortality",
+           legend_pos = "bottom") +
+      labs(subtitle = "Each box represents one person.\nThere are 1,000 people represented in this plot.")
+    
+  })
+  
+  output$CombinedMortWaffle <- renderPlot({
+    
+    patients_mort <- round(as.data.frame(out_tab())$`D30 Mortality (Subjective assessment adjusted)` * 1000)
+    
+    waffle(c("Deaths" = patients_mort, 
+             "Survivors" = 1000 - patients_mort),
+           rows = 25,
+           size = 1,
+           glyph_size = 16,
+           colors = c("#fc8d62", "#66c2a5"), 
+           title = "D30 Mortality (Subjective assessment adjusted)",
+           legend_pos = "bottom") +
+      labs(subtitle = "Each box represents one person.\nThere are 1,000 people represented in this plot.")
     
   })
 
