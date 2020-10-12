@@ -16,7 +16,7 @@
 
 # RStudio files
 .Rproj.user/
-SORTWebCalc.Rproj
+SORTWebCalc_dev.Rproj
 
 # produced vignettes
 vignettes/*.html
