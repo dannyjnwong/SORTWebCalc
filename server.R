@@ -63,13 +63,13 @@ shinyServer(function(input, output) {
       mutate(Day28 = arm::invlogit(SORT_morb_logit * 1.048 - 2.770)) %>%
       mutate(SORT_mortality = arm::invlogit(SORT_mort_logit)) %>%
       mutate(Combined_pred = ifelse(Clinical == "Don't know", NA, 
-                                    arm::invlogit(0.04044 * (SORT_mortality * 100) + 
-                                                    1.679 * (Clinical == "1-2.5%") + 
-                                                    2.583 * (Clinical == "2.6-5%") + 
-                                                    3.295 * (Clinical == "5.1-10%") + 
-                                                    4.356 * (Clinical == "10.1-50%") + 
-                                                    5.234 * (Clinical == ">50%") -
-                                                    6.629))) %>%
+                                    arm::invlogit(0.04028 * (SORT_mortality * 100) + 
+                                                    1.487 * (Clinical == "1-2.5%") + 
+                                                    2.365 * (Clinical == "2.6-5%") + 
+                                                    3.074 * (Clinical == "5.1-10%") + 
+                                                    4.156 * (Clinical == "10.1-50%") + 
+                                                    5.028 * (Clinical == ">50%") -
+                                                    6.403))) %>%
       select(POMS_Risk:Combined_pred) %>%
       rename(`D7 POMS` = "POMS_Risk",
              `D7 Low-grade POMS` = "Low_grade",
@@ -95,7 +95,7 @@ shinyServer(function(input, output) {
   output$MorbGraph <- renderPlot({
     
     ggplot(risk_distrib, aes(x = SORT_morb_risk)) +
-      geom_density(adjust = 5, size = 1, col = "white", fill = "skyblue") +
+      geom_density(adjust = 5, size = 1, col = "skyblue", fill = "skyblue") +
       labs(title = "D7 POMS morbidity",
            x = "Risk", 
            y = "Probability Density") +
@@ -127,7 +127,7 @@ shinyServer(function(input, output) {
   output$MortGraph <- renderPlot({
     
     ggplot(risk_distrib, aes(x = SORT_mort_risk)) +
-      geom_density(adjust = 5, size = 1, col = "white", fill = "skyblue") +
+      geom_density(adjust = 5, size = 1, col = "skyblue", fill = "skyblue") +
       labs(title = "D30 Mortality complications",
            x = "Risk", 
            y = "Probability Density") +
