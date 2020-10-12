@@ -24,7 +24,7 @@ shinyUI(fluidPage(
   p(""),
   a(href="https://journals.plos.org/plosmedicine/", "3. DJN Wong, SK Harris, A Sahni, JR Bedford, L Cortes, R Shawyer, AM Wilson, HA Lindsay, D Campbell, S Popham, LM Barneto, PS Myles, SNAP-2: EPICCS collaborators, SR Moonesinghe. Developing and validating subjective and objective risk assessment measures for predicting mortality after major surgery: an international prospective cohort study. PLOS Medicine 2020 (accepted, in press)."),
   p(""),
-  p("MIT License; Copyright (c) 2017-2018 Danny Jon Nian Wong."), 
+  p("MIT License; Copyright (c) 2017-2020 Danny Jon Nian Wong."), 
   a(href="https://github.com/dannyjnwong/SORTWebCalc", "Source code available here on Github."),
 
   # Sidebar with inputs
