@@ -22,7 +22,7 @@ shinyUI(fluidPage(
   p(""),
   a(href="https://doi.org/10.1093/bja/aex117", "2. DJN Wong, CM Oliver, SR Moonesinghe; Predicting postoperative morbidity in adult elective surgical patients using the Surgical Outcome Risk Tool (SORT). Br J Anaesth 2017;119(1):95-105. doi: 10.1093/bja/aex117"),
   p(""),
-  a(href="https://journals.plos.org/plosmedicine/", "3. DJN Wong, SK Harris, A Sahni, JR Bedford, L Cortes, R Shawyer, AM Wilson, HA Lindsay, D Campbell, S Popham, LM Barneto, PS Myles, SNAP-2: EPICCS collaborators, SR Moonesinghe. Developing and validating subjective and objective risk assessment measures for predicting mortality after major surgery: an international prospective cohort study. PLOS Medicine 2020 (accepted, in press)."),
+  a(href="https://doi.org/10.1371/journal.pmed.1003253", "3. DJN Wong, SK Harris, A Sahni, JR Bedford, L Cortes, R Shawyer, AM Wilson, HA Lindsay, D Campbell, S Popham, LM Barneto, PS Myles, SNAP-2: EPICCS collaborators, SR Moonesinghe. Developing and validating subjective and objective risk assessment measures for predicting mortality after major surgery: an international prospective cohort study. PLOS Medicine 2020 (accepted, in press)."),
   p(""),
   p("MIT License; Copyright (c) 2017-2020 Danny Jon Nian Wong."), 
   a(href="https://github.com/dannyjnwong/SORTWebCalc", "Source code available here on Github."),
